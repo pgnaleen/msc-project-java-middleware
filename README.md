@@ -1,1 +1,1 @@
-# msc-project-java-middleware
+# Technical Anomaly Detection
