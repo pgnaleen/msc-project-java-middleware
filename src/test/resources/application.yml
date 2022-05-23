@@ -1,0 +1,35 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  liquibase:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create
+      use-new-id-generator-mappings: false
+#  autoconfigure:
+#    exclude: org.keycloak.adapters.springboot.KeycloakAutoConfiguration
+master_realm_admin_username: admin
+master_realm_admin_password: admin
+
+keycloak:
+  auth-server-url: http://localhost:8080/auth
+  ssl-required: external
+  realm: gutech
+  resource:
+  credentials:
+    secret:
+#  enabled: false
+
+security:
+  ignored: /**
+
+keycloak-auth-url:

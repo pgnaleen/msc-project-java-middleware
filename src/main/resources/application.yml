@@ -1,0 +1,54 @@
+server:
+  port: 8089
+
+logging:
+  level:
+    root: INFO
+    com.*: DEBUG
+
+spring:
+  application:
+    name: anomaly-detection
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/anomaly_detection?autoReconnect=true
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+      use-new-id-generator-mappings: false
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+    parameters:
+      textColumnType: VARCHAR(250)
+  jackson:
+    mapper:
+      ACCEPT_CASE_INSENSITIVE_ENUMS: true
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 45MB
+
+master_realm_admin_username: admin
+master_realm_admin_password: 5nsMNn3mX63xVrdbd
+
+keycloak:
+  auth-server-url: http://localhost:8080/auth    # local
+  ssl-required: external
+  realm: gutech
+  resource: sis-admin-backend
+  credentials:
+    secret: 95b40196-891f-4cca-a711-548495348c8a    # local
+  use-resource-role-mappings: true
+  bearer-only: false
+  principal-attribute: preffered_username
+  enabled: true
+#  client-keystore: classpath:httpskeystore.jks
+#  client-key-password:
+#  client-keystore-password: test123
+#  truststore: classpath:httpskeystore.jks
+#  truststore-password: test123
+
+keycloak-auth-url: ${keycloak.auth-server-url}/realms/${keycloak.realm}/protocol/openid-connect

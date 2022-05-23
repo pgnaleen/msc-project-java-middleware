@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+    <changeSet id="insert-anomaly-detection-headers" author="nalin">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM form_definition WHERE business_entity='AD';
+            </sqlCheck>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM form WHERE descriptor='ANOMALY_DETECTION_FORM';
+            </sqlCheck>
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM form_has_field fhf INNER JOIN form f ON fhf.form_id=f.id WHERE f.descriptor='ANOMALY_DETECTION_FORM';
+            </sqlCheck>
+            <tableExists tableName="field_validation"/>
+            <tableExists tableName="form_field"/>
+            <tableExists tableName="form_display_parameters"/>
+        </preConditions>
+        <sql>
+            SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"form_definition"', 'id')), (SELECT (MAX("id") + 1) FROM "form_definition"), FALSE);
+            SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"form"', 'id')), (SELECT (MAX("id") + 1) FROM "form"), FALSE);
+            SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"field_validation"', 'id')), (SELECT (MAX("id") + 1) FROM "field_validation"), FALSE);
+            SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"form_field"', 'id')), (SELECT (MAX("id") + 1) FROM "form_field"), FALSE);
+            SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"form_has_field"', 'id')), (SELECT (MAX("id") + 1) FROM "form_has_field"), FALSE);
+            SELECT SETVAL((SELECT PG_GET_SERIAL_SEQUENCE('"form_display_parameters"', 'id')), (SELECT (MAX("id") + 1) FROM "form_display_parameters"), FALSE);
+
+            INSERT INTO form_definition (deleted, tenant_id, assigned_business_entity, business_entity, description, is_default, multiple, name, created_by, updated_by)
+            VALUES (false, null, null, 'AD', null, null, null, null, null, null);
+
+            INSERT INTO form (deleted, tenant_id, descriptor, form_definition_id, group_name, name, status, created_by, updated_by)
+            SELECT false, null, 'ANOMALY_DETECTION_FORM', fd.id, 'ANOMALY_DETECTION_GROUP', 'ANOMALY_DETECTION_FORM', 0, 'ssadmin', 'ssadmin'
+            FROM form_definition fd WHERE fd.business_entity='AD';
+
+
+-- datasetCode
+            with fv_id as (
+            INSERT INTO field_validation (deleted, tenant_id, is_required, max_length, min_length, created_by, updated_by, max_height, max_width, min_height, min_width)
+            VALUES (false, 1, true, 5, 0, 'ssadmin', 'ssadmin', null, null, null, null)
+                RETURNING id),
+                ff_id as (
+            INSERT INTO form_field (deleted, tenant_id, data_type, is_active, is_custom, is_internal, key, validation_id, created_by, updated_by)
+            SELECT false, 1, 'TEXT', true, null, true, 'datasetCode', fv_id.id, 'ssadmin', 'ssadmin'
+            FROM fv_id
+                RETURNING id),
+                fdp_id AS (
+            INSERT INTO form_display_parameters (tenant_id, is_visible_in_table, table_column_weight)
+            VALUES (1, true, 1)
+                RETURNING id)
+            INSERT INTO form_has_field (deleted, tenant_id, is_active, is_custom, label, sort_order, validation_id, form_id, form_field_id, created_by, updated_by, display_parameters_id)
+            SELECT false, 1, true, false, 'datasetCode', 1, null, f.id, (select id from ff_id), 'ssadmin', 'ssadmin', (select id from fdp_id)
+            FROM form f
+                     INNER JOIN form_definition fd on fd.id=f.form_definition_id
+            WHERE fd.business_entity='AD';
+
+
+-- datasetLocation
+            with fv_id as (
+            INSERT INTO field_validation (deleted, tenant_id, is_required, max_length, min_length, created_by, updated_by, max_height, max_width, min_height, min_width)
+            VALUES (false, 1, true, 1000, 0, 'ssadmin', 'ssadmin', null, null, null, null)
+                RETURNING id),
+                ff_id as (
+            INSERT INTO form_field (deleted, tenant_id, data_type, is_active, is_custom, is_internal, key, validation_id, created_by, updated_by)
+            SELECT false, 1, 'TEXT', true, null, true, 'datasetLocation', fv_id.id, 'ssadmin', 'ssadmin'
+            FROM fv_id
+                RETURNING id),
+                fdp_id AS (
+            INSERT INTO form_display_parameters (tenant_id, is_visible_in_table, table_column_weight)
+            VALUES (1, true, 2)
+                RETURNING id)
+            INSERT INTO form_has_field (deleted, tenant_id, is_active, is_custom, label, sort_order, validation_id, form_id, form_field_id, created_by, updated_by, display_parameters_id)
+            SELECT false, 1, true, false, 'datasetLocation', 2, null, f.id, (select id from ff_id), 'ssadmin', 'ssadmin', (select id from fdp_id)
+            FROM form f
+                     INNER JOIN form_definition fd on fd.id=f.form_definition_id
+            WHERE fd.business_entity='AD';
+
+
+-- accessLogLocation
+            with fv_id as (
+            INSERT INTO field_validation (deleted, tenant_id, is_required, max_length, min_length, created_by, updated_by, max_height, max_width, min_height, min_width)
+            VALUES (false, 1, true, 1000, 0, 'ssadmin', 'ssadmin', null, null, null, null)
+                RETURNING id),
+                ff_id as (
+            INSERT INTO form_field (deleted, tenant_id, data_type, is_active, is_custom, is_internal, key, validation_id, created_by, updated_by)
+            SELECT false, 1, 'TEXT', true, null, true, 'accessLogLocation', fv_id.id, 'ssadmin', 'ssadmin'
+            FROM fv_id
+                RETURNING id),
+                fdp_id AS (
+            INSERT INTO form_display_parameters (tenant_id, is_visible_in_table, table_column_weight)
+            VALUES (1, true, 2)
+                RETURNING id)
+            INSERT INTO form_has_field (deleted, tenant_id, is_active, is_custom, label, sort_order, validation_id, form_id, form_field_id, created_by, updated_by, display_parameters_id)
+            SELECT false, 1, true, false, 'accessLogLocation', 3, null, f.id, (select id from ff_id), 'ssadmin', 'ssadmin', (select id from fdp_id)
+            FROM form f
+                     INNER JOIN form_definition fd on fd.id=f.form_definition_id
+            WHERE fd.business_entity='AD';
+        </sql>
+    </changeSet>
+</databaseChangeLog>
